@@ -13,27 +13,48 @@ if ($conn->connect_error) {
 echo <<<_END
 		<html>
 			<head>
-				<title>adminupload</title>
+				<title>Decryptoid</title>
 			</head>
 		<div class='center-screen'>
 			<form method='post' action='adminupload.php' enctype='multipart/form-data' style='width:500px'>
 
 				<div style='margin-bottom: 15px'>
-					<h1>Admin Upload</h1>
+					<h1>Decryptoid</h1>
 			    </div>
 
 				<div style='margin-bottom: 20px'>
-					<label style='width: 50%;'>Malware: </label>
+					<label style='width: 50%;'>Enter text to be encrypted/decrypted: </label>
 					<input type='text' name='malware' style='width: 50%;'>
 			    </div>
 
 				<div style='margin-bottom: 20px'>
-					<label style='width: 50%;'>Upload malware file: </label>
+					<label style='width: 50%;'>Upload a .txt file to be encrypted/decrypted: </label>
 			    	<input type='file' name='file' style='width: 50%;'>
 				</div>
-
-			    <div>
-			   		<input type='submit' name='submit' value='Upload'>
+                
+                <div style='margin-bottom: 20px'>
+			   		<input type='submit' name='submit' value='Simple Substitution Encrypt'>
+			   	</div>
+                <div style='margin-bottom: 20px'>
+			   		<input type='submit' name='submit' value='Simple Substitution Decrypt'>
+			   	</div>
+                <div style='margin-bottom: 20px'>
+			   		<input type='submit' name='submit' value='Double Transpostion Encrypt'>
+			   	</div>
+                <div style='margin-bottom: 20px'>
+			   		<input type='submit' name='submit' value='Double Transpostion Decrypt'>
+			   	</div>
+                <div style='margin-bottom: 20px'>
+			   		<input type='submit' name='submit' value='RC4 Encrypt'>
+			   	</div>
+                <div style='margin-bottom: 20px'>
+			   		<input type='submit' name='submit' value='RC4 Decrypt'>
+			   	</div>
+                <div style='margin-bottom: 20px'>
+			   		<input type='submit' name='submit' value='DES Encrypt'>
+			   	</div>
+                <div style='margin-bottom: 20px'>
+			   		<input type='submit' name='submit' value='DES Decrypt'>
 			   	</div>
 			</form>
 		</div>	
