@@ -61,7 +61,7 @@ if (isset($_POST['username']) && isset($_POST['password'])) {
 echo <<<_END
 		<html>
 			<head>
-				<title>Final Project1</title>
+				<title>Final Project</title>
 			</head>
 		<body>
 		<div class='center-screen'>
