@@ -65,7 +65,7 @@ echo <<<_END
 			</head>
 		<body>
 		<div class='center-screen'>
-			<form method='post' action='adminloginpage.php' enctype='multipart/form-data' style='width:500px; margin-bottom:0px'>
+			<form method='post' action='adminupload.php' enctype='multipart/form-data' style='width:500px; margin-bottom:0px'>
 				<div style='margin-bottom: 5px'>
 					<h1>Admin Login</h1>
 			    </div>
