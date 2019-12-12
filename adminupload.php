@@ -49,7 +49,7 @@ if ($_POST) {
 		$mal = $conn->real_escape_string($_POST['malware']);
 		$malstring = $conn->real_escape_string($signature);
 
-		$query = "INSERT INTO `midterm2`.`midterm2admin` (`Malware`, `MalwareString`) VALUES ('$mal', '$malstring')";
+		$query = "INSERT INTO `finalproj`.`finalprojadmin` (`Malware`, `MalwareString`) VALUES ('$mal', '$malstring')";
 		$result = $conn->query($query);
 
 		if ($result === TRUE) {

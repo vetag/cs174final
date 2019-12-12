@@ -16,9 +16,9 @@ if (isset($_POST['username']) && isset($_POST['password'])) {
 
 	$password = $conn->real_escape_string($_POST['password']);
 
-	$query = "SELECT * FROM midterm2.midterm2 WHERE Username='$username' AND password = '$password'";
-	$midterm2Username = "";
-	$midterm2Password = "";
+	$query = "SELECT * FROM finalproj.finalproj WHERE Username='$username' AND password = '$password'";
+	$finalprojUsername = "";
+	$finalprojPassword = "";
 	$res = mysqli_query($conn, $query);
 	if ($res->num_rows > 0) {
 		if (!$res) {
@@ -28,14 +28,14 @@ if (isset($_POST['username']) && isset($_POST['password'])) {
 				echo 'username: ' . $row['Username'];
 				echo 'password: ' . $row['Password'];
 				echo 'salt: ' . $row['Salt'];
-				$midterm2Username = $row['Username'];
-				$midterm2Password = $row['Password'];
-				$midterm2Salt = $row['Salt'];
+				$finalprojUsername = $row['Username'];
+				$finalprojPassword = $row['Password'];
+				$finalprojSalt = $row['Salt'];
 			}
 		}
-		$passSalted = $password . $midterm2Salt;
+		$passSalted = $password . $finalprojSalt;
 		$passHash = hash('sha256', $passSalted);
-		if ($userHash == $midterm2Username && $passHash == $midterm2Password) {
+		if ($userHash == $finalprojUsername && $passHash == $finalprojPassword) {
 			echo 'Login Success!';
 			header("Location: http://localhost:8000/adminupload.php");
 		} else {
@@ -49,19 +49,10 @@ if (isset($_POST['username']) && isset($_POST['password'])) {
 	exit;
 }
 
-// $sql = "INSERT INTO midterm2 (username, password, salt) VALUES ('$userHash', '$passHash', '$salt')";
-// $result = mysqli_query($conn, $sql);
-// if (!$result) {
-// 	echo 'Could not insert values';
-// } else {
-// 	echo 'Hashed username, password, and salt inserted';
-// }
-
-
 echo <<<_END
 		<html>
 			<head>
-				<title>Midterm 2</title>
+				<title>Final Project</title>
 			</head>
 		<body>
 		<div class='center-screen'>
