@@ -3,7 +3,9 @@ require_once 'dblogin.php';
 require_once 'functions.php';
 
 $SIGNATURE_LENGTH = 20;
-
+$cipherAlphabet = "yhkqgvxfoluapwmtzecjdbsnri";
+$cipherText;
+$plainText;
 
 $conn = mysqli_connect($hn, $un, $pw, $db);
 if ($conn->connect_error) {
@@ -60,32 +62,70 @@ echo <<<_END
 		</div>	
 _END;
 
+function Cipher($input, $oldAlphabet, $newAlphabet, &$output)
+{
+	$output = "";
+	$inputLen = strlen($input);
+
+	if (strlen($oldAlphabet) != strlen($newAlphabet))
+		return false;
+
+	for ($i = 0; $i < $inputLen; ++$i)
+	{
+		$oldCharIndex = strpos($oldAlphabet, strtolower($input[$i]));
+
+		if ($oldCharIndex !== false)
+			$output .= ctype_upper($input[$i]) ? strtoupper($newAlphabet[$oldCharIndex]) : $newAlphabet[$oldCharIndex];
+		else
+			$output .= $input[$i];
+	}
+
+	return true;
+}
+
+function Encipher($input, $cipherAlphabet, &$output)
+{
+	$plainAlphabet = "abcdefghijklmnopqrstuvwxyz";
+	return Cipher($input, $plainAlphabet, $cipherAlphabet, $output);
+}
+
+function Decipher($input, $cipherAlphabet, &$output)
+{
+	$plainAlphabet = "abcdefghijklmnopqrstuvwxyz";
+	return Cipher($input, $cipherAlphabet, $plainAlphabet, $output);
+}
 
 if ($_POST) {
 	$file = $_FILES['file']['name'];
 	if (isset($_POST["malware"]) && !empty($file) && is_uploaded_file($_FILES['file']['tmp_name'])) {
 		$content = file_get_contents($_FILES['file']['tmp_name']);
-		$signature = substr($content, 0, $SIGNATURE_LENGTH);
-
+        $ssEncipher = Encipher($content, $cipherAlphabet, $cipherText);
+        $ssDecipher = Decipher($cipherText, $cipherAlphabet, $plainText);
+        echo "Simple Substitution Cipher: ";
+        echo $cipherText . "<br>";
+        echo "Simple Substitution Decipher: ";
+        echo $plainText;
+        
 		$mal = $conn->real_escape_string($_POST['malware']);
 		$malstring = $conn->real_escape_string($signature);
+        
+		//$query = "INSERT INTO `midterm2`.`midterm2admin` (`Malware`, `MalwareString`) VALUES ('$mal', '$malstring')";
+		//$result = $conn->query($query);
 
-		$query = "INSERT INTO `finalproj`.`finalprojadmin` (`Malware`, `MalwareString`) VALUES ('$mal', '$malstring')";
-		$result = $conn->query($query);
-
-		if ($result === TRUE) {
-			echo "Added " . $mal;
-		} else {
-			echo $malstring;
-			echo "<br>";
-			echo "Error: " . $sql . "<br>" . $conn->error;
-		}
-	} else {
-		echo "Error: wrong";
-	}
+		//if ($result === TRUE) {
+		//	echo "Added " . $mal;
+		//} else {
+		//	echo $malstring;
+		//	echo "<br>";
+		//	echo "Error: " . $sql . "<br>" . $conn->error;
+		//}
+	//} else {
+	//	echo "Error: wrong";
+	//}
 } else {
 	echo "Error: no post";
 }
-
+    
 $conn->close();
 echo "</body></html>";
+}
