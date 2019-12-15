@@ -95,33 +95,188 @@ function Decipher($input, $cipherAlphabet, &$output)
 	return Cipher($input, $cipherAlphabet, $plainAlphabet, $output);
 }
 
+
+
+function splitKey($keyInput)
+{
+    $key = array();
+    for ($i=0; $i<strlen($keyInput); $i++)
+    {
+        $key[$i] = $keyInput[$i];
+    }
+    return $key;
+}
+	
+	#Finding order of the characters in the key (permutation order)
+function findKeyOrder($key)
+{
+    $order = array();
+    for ($i = 0; $i < count($key); $i++)
+    {
+        $order[$i] = -1;
+    }
+    $tempArr = $key;
+    sort($tempArr);
+		
+    for ($i=0; $i<sizeof($tempArr); $i++)
+    {
+        for ($j=0; $j<sizeof($key); $j++)
+        {
+            if (($tempArr[$i] == $key[$j]) && ($order[$j] == -1))
+            {
+				$order[$j] = $i;//here
+				break;
+            }
+        }
+    }
+    return $order;
+}
+	
+function encrypt($key1, $key2, $text)
+{
+    $ciphertext = columnarEncrypt($key1, $text);
+    $ciphertext = columnarEncrypt($key2, $ciphertext);
+    return $ciphertext;
+}
+	
+function columnarEncrypt($keyInput, $text)
+{
+    $key = splitKey($keyInput);
+    $order = findKeyOrder($key);
+    $numColumns = count($key);
+    $numRows = ceil(strlen($text)/$numColumns);
+		
+    #Initializing and setting up pre-transpose 2d array for cipherText
+    $ciphertext = array();
+    $textLocation = 0;
+    for ($row = 0; $row<$numRows; $row++)
+    {
+        for ($column = 0; $column < $numColumns; $column++)
+        {
+            if ($textLocation<strlen($text))
+            {
+				$ciphertext[$row][$column] = $text[$textLocation];
+            }
+            else
+            {
+				$ciphertext[$row][$column] = '|';
+            }
+            $textLocation++;
+        }
+    }
+		
+	#Transposing cipherText and inputting into newCipherText
+	$newCipherText = "";
+	for ($i =0; $i<sizeof($order);$i++)
+	{
+		$j = 0;
+		while ($order[$j] != $i)
+		{
+            $j++;
+        }
+        for ($row = 0; $row<$numRows; $row++)
+        {
+            $newCipherText = $newCipherText . $ciphertext[$row][$j];
+        }
+    }
+    $newCipherText = str_replace('|','',$newCipherText);
+    return $newCipherText;
+}
+	
+function decrypt($key1, $key2, $ciphertext)
+{
+    $text = columnarDecrypt($key1, $ciphertext);
+    $text = columnarDecrypt($key2, $text);
+    return $text;
+}
+	
+function columnarDecrypt($keyInput, $encryptedText)
+{
+    $key = splitKey($keyInput);
+    $order = findKeyOrder($key);
+	$numColumns = count($key);
+    $numRows = ceil(strlen($encryptedText)/$numColumns);
+    
+	$ciphertext = array();
+    for ($i = 0; $i<$numRows; $i++)
+	{
+        for($j =0; $j<$numColumns;$j++)
+        {
+            $ciphertext[$i][$j] = "-1";
+        }
+    }
+    
+    #Filling empty slots of 2d array to avoid characters-out-out-order transpositions
+    $emptySlots = ($numRows*$numColumns) - strlen($encryptedText);
+    for($j=$numColumns-$emptySlots; $j<$numColumns; $j++)
+	{
+        $ciphertext[$numRows-1][$j] = '|';
+    }
+    
+	#Transposing
+    $newCipherText = "";
+    $textLocation = 0;
+    for ($i =0; $i<sizeof($order);$i++)
+    {
+		$j = 0;
+        while ($order[$j] != $i)
+        {
+            $j++;
+        }
+        for ($row = 0; $row<$numRows; $row++)
+        {
+            if ($ciphertext[$row][$j] == '|')
+            {
+                break;
+            }
+            else if ($textLocation<strlen($encryptedText))
+            {
+                $ciphertext[$row][$j] = $encryptedText[$textLocation];
+            }
+            else
+            {
+                $ciphertext[$row][$j] = ' ';
+            }
+            $textLocation++;
+        }
+    }
+    
+    #newCipherText will have the entire decrypted text as a string
+    for ($row = 0; $row<$numRows; $row++)
+    {
+        for ($column = 0; $column < $numColumns; $column++)
+        {
+            $newCipherText = $newCipherText . $ciphertext[$row][$column];
+        }
+    }
+    $newCipherText = str_replace('|','',$newCipherText);
+    return $newCipherText;
+}
+
+
+
 if ($_POST) {
 	$file = $_FILES['file']['name'];
 	if (isset($_POST["malware"]) && !empty($file) && is_uploaded_file($_FILES['file']['tmp_name'])) {
+
 		$content = file_get_contents($_FILES['file']['tmp_name']);
         $ssEncipher = Encipher($content, $cipherAlphabet, $cipherText);
         $ssDecipher = Decipher($cipherText, $cipherAlphabet, $plainText);
         echo "Simple Substitution Cipher: ";
         echo $cipherText . "<br>";
         echo "Simple Substitution Decipher: ";
-        echo $plainText;
+        echo $plainText. "<br>";
+
+        $dtEncrypt = encrypt('toast','peanuts', $content);
+        echo "Double Transposition Cipher: ";
+        echo $dtEncrypt . "<br>";
+        $dtDecrypt = decrypt('peanuts', 'toast', $dtEncrypt);
+        echo "Double Transposition Decipher: ";
+        echo $dtDecrypt . "<br>";
         
 		$mal = $conn->real_escape_string($_POST['malware']);
 		$malstring = $conn->real_escape_string($signature);
         
-		//$query = "INSERT INTO `midterm2`.`midterm2admin` (`Malware`, `MalwareString`) VALUES ('$mal', '$malstring')";
-		//$result = $conn->query($query);
-
-		//if ($result === TRUE) {
-		//	echo "Added " . $mal;
-		//} else {
-		//	echo $malstring;
-		//	echo "<br>";
-		//	echo "Error: " . $sql . "<br>" . $conn->error;
-		//}
-	//} else {
-	//	echo "Error: wrong";
-	//}
 } else {
 	echo "Error: no post";
 }
