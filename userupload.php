@@ -39,29 +39,29 @@ if ($_POST) {
 
 		$content = file_get_contents($_FILES['userfile']['tmp_name']);
 
-		$query = "SELECT * FROM midterm2.midterm2admin";
+		$query = "SELECT * FROM finalproj.finalprojadmin";
 		$result = $conn->query($query);
 
 		if ($result->num_rows > 0) {
-			$malfiles = 0;
+			$files = 0;
 			while ($row = $result->fetch_assoc()) {
 
-				$mal = $row['Malware'];
-				$malstring = $row['MalwareString'];
+				$file = $row['File'];
+				$filestring = $row['FileString'];
 
-				if (strpos($content, $malstring) !== false) {
-					$malfiles++;
-					echo "Malware detected: $mal";
+				if (strpos($content, $filestring) !== false) {
+					$files++;
+					echo "file detected: $file";
 					echo "<br>";
 				}
 			}
 
-			if ($malfiles == 0) {
-				echo "No malware detected";
+			if ($files == 0) {
+				echo "No file detected";
 			}
 		} else {
 			echo "<br>";
-			echo "No malware to compare";
+			echo "No file to decrypt/encrypt";
 		}
 	}
 }
