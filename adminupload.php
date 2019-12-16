@@ -62,6 +62,8 @@ echo <<<_END
 		</div>	
 _END;
 
+
+//Simple Substitution
 function Cipher($input, $oldAlphabet, $newAlphabet, &$output)
 {
 	$output = "";
@@ -95,7 +97,7 @@ function Decipher($input, $cipherAlphabet, &$output)
 	return Cipher($input, $cipherAlphabet, $plainAlphabet, $output);
 }
 
-
+//Double Transposition
 
 function splitKey($keyInput)
 {
@@ -254,10 +256,103 @@ function columnarDecrypt($keyInput, $encryptedText)
 }
 
 
+//RC4
+function rc4Cipher($key, $plainText) 
+{
+    $s = array();
+    //Initialize array of 256 bytes
+    for ($i = 0; $i < 256; $i++) 
+    {
+        $s[$i] = $i;
+    }
+    //Secret key array
+    $t = array();
+    for ($i = 0; $i < 256; $i++) 
+    {
+        $t[$i] = ord($key[$i % strlen($key)]);
+    }
+    $j = 0;
+    for ($i = 0; $i < 256; $i++) 
+    {
+        $j = ($j + $s[$i] + $t[$i]) % 256;
+        //Swap value of s[i] and s[j]
+        $temp = $s[$i];
+        $s[$i] = $s[$j];
+        $s[$j] = $temp;
+    }
+    //Generate key stream
+    $i = 0;
+    $j = 0;
+    $cipherText = '';
+    for ($y = 0; $y < strlen($plainText); $y++) 
+    {
+        $i = ($i + 1) % 256;
+        $j = ($j + $s[$i]) % 256;
+        $x = $s[$i];
+        $s[$i] = $s[$j];
+        $s[$j] = $x;
+        $cipherText .= $plainText[$y] ^ chr($s[($s[$i] + $s[$j]) % 256]);
+    }
+    return $cipherText;
+}
 
-if ($_POST) {
+//DES
+function encrypt($str)
+{
+    $key, $method = 'DES-ECB', $output = '', $iv = '', $options = OPENSSL_RAW_DATA | OPENSSL_NO_PADDING
+    $str = $this->pkcsPadding($str, 8);
+    $sign = openssl_encrypt($str, $this->method, $this->key, $this->options, $this->iv);
+
+    if ($this->output == self::OUTPUT_BASE64) 
+    {
+        $sign = base64_encode($sign);
+    } else if ($this->output == self::OUTPUT_HEX) 
+    {
+        $sign = bin2hex($sign);
+    }
+
+    return $sign;
+}
+
+public function decrypt($encrypted)
+{
+    if ($this->output == self::OUTPUT_BASE64) 
+    {
+        $encrypted = base64_decode($encrypted);
+    } 
+    else if ($this->output == self::OUTPUT_HEX) 
+    {
+        $encrypted = hex2bin($encrypted);
+    }
+
+    $sign = @openssl_decrypt($encrypted, $this->method, $this->key, $this->options, $this->iv);
+    $sign = $this->unPkcsPadding($sign);
+    $sign = rtrim($sign);
+    return $sign;
+}
+
+private function pkcsPadding($str, $blocksize)
+{
+    $pad = $blocksize - (strlen($str) % $blocksize);
+    return $str . str_repeat(chr($pad), $pad);
+}
+
+private function unPkcsPadding($str)
+{
+    $pad = ord($str{strlen($str) - 1});
+    if ($pad > strlen($str))
+    {
+        return false;
+    }
+    return substr($str, 0, -1 * $pad);
+}
+
+
+if ($_POST) 
+{
 	$file = $_FILES['file']['name'];
-	if (isset($_POST["malware"]) && !empty($file) && is_uploaded_file($_FILES['file']['tmp_name'])) {
+	if (isset($_POST["malware"]) && !empty($file) && is_uploaded_file($_FILES['file']['tmp_name'])) 
+    {
 
 		$content = file_get_contents($_FILES['file']['tmp_name']);
         $ssEncipher = Encipher($content, $cipherAlphabet, $cipherText);
@@ -267,18 +362,32 @@ if ($_POST) {
         echo "Simple Substitution Decipher: ";
         echo $plainText. "<br>";
 
-        $dtEncrypt = encrypt('toast','peanuts', $content);
+        $dtEncrypt = encrypt("toast","peanuts", $content);
         echo "Double Transposition Cipher: ";
         echo $dtEncrypt . "<br>";
-        $dtDecrypt = decrypt('peanuts', 'toast', $dtEncrypt);
+        $dtDecrypt = decrypt("peanuts", "toast", $dtEncrypt);
         echo "Double Transposition Decipher: ";
         echo $dtDecrypt . "<br>";
+        
+        $rc4Encipher = rc4Cipher("books", $content);
+        echo "RC4 Cipher: ";
+        echo $rc4Encipher . "<br>";
+        $rc4Decipher = rc4Cipher("books", $rc4Encipher);
+        echo "RC4 Decipher: ";
+        echo $rc4Decipher . "<br>";
+        
+        
+        $key = 'key123456';
+        $iv = 'iv123456';
+        $desEncipher;
         
 		$mal = $conn->real_escape_string($_POST['malware']);
 		$malstring = $conn->real_escape_string($signature);
         
-} else {
-	echo "Error: no post";
+} 
+else 
+{
+    echo "Error: no post";
 }
     
 $conn->close();
