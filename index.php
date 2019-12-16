@@ -7,9 +7,9 @@ if ($conn->connect_error) {
 }
 $isValid = true;
 if (isset($_POST['username']) && isset($_POST['password'])) {
-	$username = $conn->real_escape_string($_POST['username']);
+	$username = mysql_entities_fix_string($conn->real_escape_string($_POST['username']));
 	$userHash = hash('sha256', $username);
-	$password = $conn->real_escape_string($_POST['password']);
+	$password = mysql_entities_fix_string($conn->real_escape_string($_POST['password']));
 	$query = "SELECT * FROM finalproj.finalproj WHERE Username='$username' AND password = '$password'";
 	$finalprojUsername = "";
 	$finalprojPassword = "";
