@@ -85,20 +85,19 @@ function Cipher($input, $oldAlphabet, $newAlphabet, &$output)
 	return true;
 }
 
-function Encipher($input, $cipherAlphabet, &$output)
+function ssEncipher($input, $cipherAlphabet, &$output)
 {
 	$plainAlphabet = "abcdefghijklmnopqrstuvwxyz";
 	return Cipher($input, $plainAlphabet, $cipherAlphabet, $output);
 }
 
-function Decipher($input, $cipherAlphabet, &$output)
+function ssDecipher($input, $cipherAlphabet, &$output)
 {
 	$plainAlphabet = "abcdefghijklmnopqrstuvwxyz";
 	return Cipher($input, $cipherAlphabet, $plainAlphabet, $output);
 }
 
 //Double Transposition
-
 function splitKey($keyInput)
 {
     $key = array();
@@ -134,7 +133,7 @@ function findKeyOrder($key)
     return $order;
 }
 	
-function encrypt($key1, $key2, $text)
+function dtEncipher($key1, $key2, $text)
 {
     $ciphertext = columnarEncrypt($key1, $text);
     $ciphertext = columnarEncrypt($key2, $ciphertext);
@@ -185,7 +184,7 @@ function columnarEncrypt($keyInput, $text)
     return $newCipherText;
 }
 	
-function decrypt($key1, $key2, $ciphertext)
+function dtDecipher($key1, $key2, $ciphertext)
 {
     $text = columnarDecrypt($key1, $ciphertext);
     $text = columnarDecrypt($key2, $text);
@@ -297,47 +296,40 @@ function rc4Cipher($key, $plainText)
 }
 
 //DES
-function encrypt($str)
+function desEncipher($key, $str)
 {
-    $key, $method = 'DES-ECB', $output = '', $iv = '', $options = OPENSSL_RAW_DATA | OPENSSL_NO_PADDING
-    $str = $this->pkcsPadding($str, 8);
-    $sign = openssl_encrypt($str, $this->method, $this->key, $this->options, $this->iv);
-
-    if ($this->output == self::OUTPUT_BASE64) 
-    {
-        $sign = base64_encode($sign);
-    } else if ($this->output == self::OUTPUT_HEX) 
-    {
-        $sign = bin2hex($sign);
-    }
+    $method = 'DES-ECB'; 
+    $output = 'OUTPUT_HEX'; 
+    $iv = ''; 
+    $options = OPENSSL_RAW_DATA | OPENSSL_NO_PADDING;
+    $str = pkcsPadding($str, 8);
+    $sign = openssl_encrypt($str, $method, $key, $options, $iv);
+    $sign = bin2hex($sign);
+    //}
 
     return $sign;
 }
 
-public function decrypt($encrypted)
+function desDecipher($key, $encrypted)
 {
-    if ($this->output == self::OUTPUT_BASE64) 
-    {
-        $encrypted = base64_decode($encrypted);
-    } 
-    else if ($this->output == self::OUTPUT_HEX) 
-    {
-        $encrypted = hex2bin($encrypted);
-    }
-
-    $sign = @openssl_decrypt($encrypted, $this->method, $this->key, $this->options, $this->iv);
-    $sign = $this->unPkcsPadding($sign);
+    $method = 'DES-ECB'; 
+    $output = 'OUTPUT_HEX'; 
+    $iv = ''; 
+    $options = OPENSSL_RAW_DATA | OPENSSL_NO_PADDING;
+    $encrypted = hex2bin($encrypted);
+    $sign = @openssl_decrypt($encrypted, $method, $key, $options, $iv);
+    $sign = unPkcsPadding($sign);
     $sign = rtrim($sign);
     return $sign;
 }
 
-private function pkcsPadding($str, $blocksize)
+function pkcsPadding($str, $blocksize)
 {
     $pad = $blocksize - (strlen($str) % $blocksize);
     return $str . str_repeat(chr($pad), $pad);
 }
 
-private function unPkcsPadding($str)
+function unPkcsPadding($str)
 {
     $pad = ord($str{strlen($str) - 1});
     if ($pad > strlen($str))
@@ -355,17 +347,17 @@ if ($_POST)
     {
 
 		$content = file_get_contents($_FILES['file']['tmp_name']);
-        $ssEncipher = Encipher($content, $cipherAlphabet, $cipherText);
-        $ssDecipher = Decipher($cipherText, $cipherAlphabet, $plainText);
+        $ssEncipher = ssEncipher($content, $cipherAlphabet, $cipherText);
+        $ssDecipher = ssDecipher($cipherText, $cipherAlphabet, $plainText);
         echo "Simple Substitution Cipher: ";
         echo $cipherText . "<br>";
         echo "Simple Substitution Decipher: ";
         echo $plainText. "<br>";
 
-        $dtEncrypt = encrypt("toast","peanuts", $content);
+        $dtEncrypt = dtEncipher("toast","peanuts", $content);
         echo "Double Transposition Cipher: ";
         echo $dtEncrypt . "<br>";
-        $dtDecrypt = decrypt("peanuts", "toast", $dtEncrypt);
+        $dtDecrypt = dtDecipher("peanuts", "toast", $dtEncrypt);
         echo "Double Transposition Decipher: ";
         echo $dtDecrypt . "<br>";
         
@@ -376,10 +368,12 @@ if ($_POST)
         echo "RC4 Decipher: ";
         echo $rc4Decipher . "<br>";
         
-        
-        $key = 'key123456';
-        $iv = 'iv123456';
-        $desEncipher;
+        $desEncipher = desEncipher('key123456', $content);
+        echo "DES Encipher: ";
+        echo $desEncipher . "<br>";
+        $desDecipher = desDecipher('key123456', $desEncipher);
+        echo "DES Decipher: ";
+        echo $desDecipher . "<br>";
         
 		$mal = $conn->real_escape_string($_POST['malware']);
 		$malstring = $conn->real_escape_string($signature);
