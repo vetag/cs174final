@@ -1,17 +1,14 @@
 <?php
 require_once 'dblogin.php';
 require_once 'functions.php';
-
 $SIGNATURE_LENGTH = 20;
 $cipherAlphabet = "yhkqgvxfoluapwmtzecjdbsnri";
 $cipherText;
 $plainText;
-
 $conn = mysqli_connect($hn, $un, $pw, $db);
 if ($conn->connect_error) {
     die(mysql_fatal_error(“error”, $conn));
 }
-
 echo <<<_END
 		<html>
 			<head>
@@ -19,16 +16,13 @@ echo <<<_END
 			</head>
 		<div class='center-screen'>
 			<form method='post' action='adminupload.php' enctype='multipart/form-data' style='width:500px'>
-
 				<div style='margin-bottom: 15px'>
 					<h1>Decryptoid</h1>
 			    </div>
-
 				<div style='margin-bottom: 20px'>
 					<label style='width: 50%;'>Enter text to be encrypted/decrypted: </label>
 					<input type='text' name='malware' style='width: 50%;'>
 			    </div>
-
 				<div style='margin-bottom: 20px'>
 					<label style='width: 50%;'>Upload a .txt file to be encrypted/decrypted: </label>
 			    	<input type='file' name='file' style='width: 50%;'>
@@ -61,41 +55,32 @@ echo <<<_END
 			</form>
 		</div>	
 _END;
-
-
 //Simple Substitution
 function Cipher($input, $oldAlphabet, $newAlphabet, &$output)
 {
     $output = "";
     $inputLen = strlen($input);
-
     if (strlen($oldAlphabet) != strlen($newAlphabet))
         return false;
-
     for ($i = 0; $i < $inputLen; ++$i) {
         $oldCharIndex = strpos($oldAlphabet, strtolower($input[$i]));
-
         if ($oldCharIndex !== false)
             $output .= ctype_upper($input[$i]) ? strtoupper($newAlphabet[$oldCharIndex]) : $newAlphabet[$oldCharIndex];
         else
             $output .= $input[$i];
     }
-
     return true;
 }
-
 function ssEncipher($input, $cipherAlphabet, &$output)
 {
     $plainAlphabet = "abcdefghijklmnopqrstuvwxyz";
     return Cipher($input, $plainAlphabet, $cipherAlphabet, $output);
 }
-
 function ssDecipher($input, $cipherAlphabet, &$output)
 {
     $plainAlphabet = "abcdefghijklmnopqrstuvwxyz";
     return Cipher($input, $cipherAlphabet, $plainAlphabet, $output);
 }
-
 //Double Transposition
 function splitKey($keyInput)
 {
@@ -105,7 +90,6 @@ function splitKey($keyInput)
     }
     return $key;
 }
-
 #Finding order of the characters in the key (permutation order)
 function findKeyOrder($key)
 {
@@ -115,7 +99,6 @@ function findKeyOrder($key)
     }
     $tempArr = $key;
     sort($tempArr);
-
     for ($i = 0; $i < sizeof($tempArr); $i++) {
         for ($j = 0; $j < sizeof($key); $j++) {
             if (($tempArr[$i] == $key[$j]) && ($order[$j] == -1)) {
@@ -126,21 +109,18 @@ function findKeyOrder($key)
     }
     return $order;
 }
-
 function dtEncipher($key1, $key2, $text)
 {
     $ciphertext = columnarEncrypt($key1, $text);
     $ciphertext = columnarEncrypt($key2, $ciphertext);
     return $ciphertext;
 }
-
 function columnarEncrypt($keyInput, $text)
 {
     $key = splitKey($keyInput);
     $order = findKeyOrder($key);
     $numCols = count($key);
     $numRows = ceil(strlen($text) / $numCols);
-
     #Initializing and setting up pre-transpose 2d array for cipherText
     $ciphertext = array();
     $textLoc = 0;
@@ -154,7 +134,6 @@ function columnarEncrypt($keyInput, $text)
             $textLoc++;
         }
     }
-
     #Transposing cipherText and inputting into newCipherText
     $newCipherText = "";
     for ($i = 0; $i < sizeof($order); $i++) {
@@ -169,34 +148,29 @@ function columnarEncrypt($keyInput, $text)
     $newCipherText = str_replace('|', '', $newCipherText);
     return $newCipherText;
 }
-
 function dtDecipher($key1, $key2, $ciphertext)
 {
     $text = columnarDecrypt($key1, $ciphertext);
     $text = columnarDecrypt($key2, $text);
     return $text;
 }
-
 function columnarDecrypt($keyInput, $encryptedText)
 {
     $key = splitKey($keyInput);
     $order = findKeyOrder($key);
     $numCols = count($key);
     $numRows = ceil(strlen($encryptedText) / $numCols);
-
     $ciphertext = array();
     for ($i = 0; $i < $numRows; $i++) {
         for ($j = 0; $j < $numCols; $j++) {
             $ciphertext[$i][$j] = "-1";
         }
     }
-
     #Filling empty slots of 2d array to avoid characters-out-of-order transpositions
     $emptySlots = ($numRows * $numCols) - strlen($encryptedText);
     for ($j = $numCols - $emptySlots; $j < $numCols; $j++) {
         $ciphertext[$numRows - 1][$j] = '|';
     }
-
     #Transposing
     $newCipherText = "";
     $textLoc = 0;
@@ -216,7 +190,6 @@ function columnarDecrypt($keyInput, $encryptedText)
             $textLoc++;
         }
     }
-
     #newCipherText will have the entire decrypted text as a string
     for ($row = 0; $row < $numRows; $row++) {
         for ($column = 0; $column < $numCols; $column++) {
@@ -226,8 +199,6 @@ function columnarDecrypt($keyInput, $encryptedText)
     $newCipherText = str_replace('|', '', $newCipherText);
     return $newCipherText;
 }
-
-
 //RC4
 function rc4Cipher($key, $plainText)
 {
@@ -263,7 +234,6 @@ function rc4Cipher($key, $plainText)
     }
     return $cipherText;
 }
-
 //DES
 function desEncipher($key, $str)
 {
@@ -274,10 +244,8 @@ function desEncipher($key, $str)
     $str = pkcsPadding($str, 8);
     $sign = openssl_encrypt($str, $method, $key, $options, $iv);
     $sign = bin2hex($sign);
-
     return $sign;
 }
-
 function desDecipher($key, $encrypted)
 {
     $method = 'DES-ECB';
@@ -290,13 +258,11 @@ function desDecipher($key, $encrypted)
     $sign = rtrim($sign);
     return $sign;
 }
-
 function pkcsPadding($str, $blocksize)
 {
     $pad = $blocksize - (strlen($str) % $blocksize);
     return $str . str_repeat(chr($pad), $pad);
 }
-
 function unPkcsPadding($str)
 {
     $pad = ord($str{
@@ -307,46 +273,81 @@ function unPkcsPadding($str)
     return substr($str, 0, -1 * $pad);
 }
 
+function mysql_entities_fix_string($connection, $string)
+    {
+	return htmlentities(mysql_fix_string($connection, $string));
+    }
+    function mysql_fix_string($connection, $string)
+    {
+ 	if (get_magic_quotes_gpc()) 
+        {
+		$string = stripslashes($string);
+	
+	}
+    return $connection->real_escape_string($string);
+     //sanitize
+     $var = sanitizeMySQL($connection, $_POST['user_input']);
+   
+    }
 
+if ($connection->connect_error) 
+{
+    die("Connection failed: " );
+}
 if ($_POST) {
     $file = $_FILES['file']['name'];
-    if (isset($_POST["malware"]) && !empty($file) && is_uploaded_file($_FILES['file']['tmp_name'])) {
-
-        $content = file_get_contents($_FILES['file']['tmp_name']);
-        $ssEncipher = ssEncipher($content, $cipherAlphabet, $cipherText);
-        $ssDecipher = ssDecipher($cipherText, $cipherAlphabet, $plainText);
+    if (isset($_POST["file"]) && !empty($file) && is_uploaded_file($_FILES['file']['tmp_name'])) {
+        $content = sanitizeString(file_get_contents($_FILES['file']['tmp_name']));
+        $ssEncipher = sanitizeString(ssEncipher($content, $cipherAlphabet, $cipherText));
+        $ssDecipher = sanitizeString(ssDecipher($cipherText, $cipherAlphabet, $plainText));
         echo "Simple Substitution Cipher: ";
         echo $cipherText . "<br>";
         echo "Simple Substitution Decipher: ";
         echo $plainText . "<br>";
-
         $dtEncipher = dtEncipher("toast", "peanuts", $content);
         echo "Double Transposition Cipher: ";
         echo $dtEncipher . "<br>";
         $dtDecrypt = dtDecipher("peanuts", "toast", $dtEncipher);
         echo "Double Transposition Decipher: ";
         echo $dtDecrypt . "<br>";
-
         $rc4Encipher = rc4Cipher("books", $content);
         echo "RC4 Cipher: ";
         echo $rc4Encipher . "<br>";
         $rc4Decipher = rc4Cipher("books", $rc4Encipher);
         echo "RC4 Decipher: ";
         echo $rc4Decipher . "<br>";
-
         $desEncipher = desEncipher('key123456', $content);
         echo "DES Encipher: ";
         echo $desEncipher . "<br>";
         $desDecipher = desDecipher('key123456', $desEncipher);
         echo "DES Decipher: ";
         echo $desDecipher . "<br>";
-
         $mal = $conn->real_escape_string($_POST['malware']);
         $malstring = $conn->real_escape_string($signature);
-    } else {
+
+	//database insertion
+	$query = "INSERT INTO cipher_info VALUES('$conn','$content', '$cipherText')";
+        $result = $conn->query($query);
+          if (!$result) die($conn->error);
+    } 
+    else {
         echo "Error: no post";
     }
-
     $conn->close();
     echo "</body></html>";
+
+//sanitization functions 
+function sanitizeString($var) 
+{
+    $var = stripslashes($var);
+    $var = strip_tags($var);
+    $var = htmlentities($var);
+    return $var;
+}
+function sanitizeMySQL($connection, $var) 
+{
+   $var = $connection->real_escape_string($var);
+   $var = sanitizeString($var);
+   return $var;
+}
 }
